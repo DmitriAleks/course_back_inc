@@ -3,7 +3,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.productsRouter = void 0;
 const express_1 = require("express");
 const products_repository_1 = require("../repositoires/products-repository");
+const express_validator_1 = require("express-validator");
+const input_validation_middleware_1 = require("../middleware/input-validation-middleware");
 exports.productsRouter = (0, express_1.Router)({});
+//Валидатор добавляем как мидлвеер, дальнейшая проверка происходит в след колбеке
+const titleValidation = (0, express_validator_1.body)('title').trim().isLength({ min: 3, max: 30 }).withMessage('Custom error');
 //-------------------GET---------------//
 exports.productsRouter.get('/', (req, res) => {
     var _a, _b;
@@ -30,12 +34,13 @@ exports.productsRouter.delete('/:id', (req, res) => {
     }
 });
 //-------------------POST---------------//
-exports.productsRouter.post('/', (req, res) => {
+exports.productsRouter.post('/', titleValidation, input_validation_middleware_1.inputValidationMiddleware, (req, res) => {
+    // проверка работы после валидатора
     const newProduct = products_repository_1.productsRepository.createProduct(req.body.title);
     res.status(201).send(newProduct);
 });
 //-------------------PUT---------------//
-exports.productsRouter.put('/:id', (req, res) => {
+exports.productsRouter.put('/:id', titleValidation, input_validation_middleware_1.inputValidationMiddleware, (req, res) => {
     const isUpdate = products_repository_1.productsRepository.updateProduct(req.params.id, req.body.title);
     if (isUpdate) {
         const product = products_repository_1.productsRepository.findProducts(req.params.id);

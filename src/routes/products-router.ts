@@ -1,8 +1,12 @@
 import {Request, Response, Router} from "express";
 import {productsRepository} from "../repositoires/products-repository";
+import {body, validationResult} from "express-validator";
+import {inputValidationMiddleware} from "../middleware/input-validation-middleware";
 
 export const productsRouter = Router({})
 
+//Валидатор добавляем как мидлвеер, дальнейшая проверка происходит в след колбеке
+const titleValidation = body('title').trim().isLength({min: 3, max: 30}).withMessage('Custom error')
 
 //-------------------GET---------------//
 productsRouter.get('/', (req: Request, res: Response) => {
@@ -27,12 +31,15 @@ productsRouter.delete('/:id', (req: Request, res: Response) => {
     }
 })
 //-------------------POST---------------//
-productsRouter.post('/', (req: Request, res: Response) => {
-    const newProduct = productsRepository.createProduct(req.body.title)
-    res.status(201).send(newProduct)
-})
+productsRouter.post('/', titleValidation, inputValidationMiddleware,
+    (req: Request, res: Response) => {
+        // проверка работы после валидатора
+
+        const newProduct = productsRepository.createProduct(req.body.title)
+        res.status(201).send(newProduct)
+    })
 //-------------------PUT---------------//
-productsRouter.put('/:id', (req: Request, res: Response) => {
+productsRouter.put('/:id', titleValidation, inputValidationMiddleware, (req: Request, res: Response) => {
     const isUpdate = productsRepository.updateProduct(req.params.id, req.body.title)
     if (isUpdate) {
         const product = productsRepository.findProducts(req.params.id)
