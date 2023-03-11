@@ -2,6 +2,28 @@ import express, {NextFunction, Request, Response} from 'express'
 import bodyParser from "body-parser";
 import {productsRouter} from "./routes/products-router";
 import {addressesRouter} from "./routes/addresses-router";
+import dotenv from 'dotenv'
+import {MongoClient} from "mongodb";
+import {ProductsType} from "./repositoires/products-db-repository";
+dotenv.config()
+
+const mongoURi = process.env.MONGO_URL|| "mongodb://127.0.0.1:27017"
+console.log('mongoURi', mongoURi,  process.env.MONGO_URL)
+const client = new MongoClient(mongoURi)
+const shopDB = client.db("shop")
+export const productCollections = shopDB.collection<ProductsType>("products")
+
+export async function runDB() {
+    try {
+        await client.connect()
+
+        ///await client.db("shop").command({ping: 1})
+    } catch {
+       // await client.close()
+    }
+
+}
+
 
 const app = express()
 
@@ -46,8 +68,15 @@ const authGuardMiddleware = (req: Request, res: Response, next: NextFunction) =>
 }
 
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-})
+const startApp = async () => {
+    await runDB().then(()=>{
+        console.log('Все заебумба')
+    })
+    app.listen(port, () => {
+        console.log(`Example app listening on port ${port}`)
+    })
+}
+
+startApp()
 
 
