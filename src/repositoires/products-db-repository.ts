@@ -16,11 +16,7 @@ export const productsInMemoryRepository = {
     async getProductById(id: string): Promise<ProductsType | null> {
         return productCollections.findOne({})
     },
-    async createProduct(title: string): Promise<ProductsType> {
-        const newProduct = {
-            id: (+(new Date())).toString(),
-            title
-        }
+    async createProduct(newProduct:any): Promise<ProductsType> {
         const result = await productCollections.insertOne(newProduct)
         return newProduct
     },

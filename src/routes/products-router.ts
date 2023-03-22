@@ -1,7 +1,7 @@
 import {Request, Response, Router} from "express";
-import {productsInMemoryRepository} from "../repositoires/products-db-repository";
-import {body, validationResult} from "express-validator";
+import {body} from "express-validator";
 import {inputValidationMiddleware} from "../middleware/input-validation-middleware";
+import {productsService} from "../domain/porducts.sever";
 
 export const productsRouter = Router({})
 
@@ -10,11 +10,11 @@ const titleValidation = body('title').trim().isLength({min: 3, max: 30}).withMes
 
 //-------------------GET---------------//
 productsRouter.get('/', async (req: Request, res: Response) => {
-    const foundProducts = await productsInMemoryRepository.findProducts(req.query?.title?.toString())
+    const foundProducts = await productsService.findProducts(req.query?.title?.toString())
     res.send(foundProducts)
 })
 productsRouter.get('/:id', async (req: Request, res: Response) => {
-    const product = await productsInMemoryRepository.getProductById(req.params.id)
+    const product = await productsService.getProductById(req.params.id)
     if (product) {
         res.send(product)
     } else {
@@ -23,9 +23,9 @@ productsRouter.get('/:id', async (req: Request, res: Response) => {
 })
 //-------------------DELETE---------------//
 productsRouter.delete('/:id', async (req: Request, res: Response) => {
-    const isDeleted = await productsInMemoryRepository.deleteProduct(req.params.id)
+    const isDeleted = await productsService.deleteProduct(req.params.id)
     if (isDeleted) {
-        res.send(204) //No content
+        res.send(204)
     } else {
         res.send(404)
     }
@@ -33,16 +33,14 @@ productsRouter.delete('/:id', async (req: Request, res: Response) => {
 //-------------------POST---------------//
 productsRouter.post('/', titleValidation, inputValidationMiddleware,
    async (req: Request, res: Response) => {
-        // проверка работы после валидатора
-
-        const newProduct = await productsInMemoryRepository.createProduct(req.body.title)
+        const newProduct = await productsService.createProduct(req.body.title)
         res.status(201).send(newProduct)
     })
 //-------------------PUT---------------//
 productsRouter.put('/:id', titleValidation, inputValidationMiddleware, async (req: Request, res: Response) => {
-    const isUpdate = await productsInMemoryRepository.updateProduct(req.params.id, req.body.title)
+    const isUpdate = await productsService.updateProduct(req.params.id, req.body.title)
     if (isUpdate) {
-        const product = await productsInMemoryRepository.findProducts(req.params.id)
+        const product = await productsService.findProducts(req.params.id)
         res.send(product)
     } else {
         res.send(404)
